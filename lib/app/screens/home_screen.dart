@@ -20,9 +20,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Start step counting service
-    final stepService = Provider.of<StepCounterService>(context, listen: false);
-    stepService.startCounting();
+    // Use addPostFrameCallback to avoid the setState during build error
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Start step counting service
+      final stepService = Provider.of<StepCounterService>(context, listen: false);
+      stepService.startCounting();
+    });
   }
 
   @override
@@ -52,7 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               // User greeting
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 color: Theme.of(context).primaryColor,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -62,17 +66,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(
                           'Salom, Foydalanuvchi!',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                         ),
                         const SizedBox(height: 5),
                         Text(
                           'Bugun sog\'lom qadamlar',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.white,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white,
+                                  ),
                         ),
                       ],
                     ),
@@ -133,9 +139,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       'Qo\'shimcha imkoniyatlar',
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                            fontSize: 18,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.displayMedium?.copyWith(
+                                fontSize: 18,
+                              ),
                     ),
                     const SizedBox(height: 15),
                     Row(
@@ -267,4 +274,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-} 
+}

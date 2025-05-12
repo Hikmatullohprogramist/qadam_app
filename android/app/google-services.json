@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "500896448263",
+    "project_id": "qadam-app",
+    "storage_bucket": "qadam-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:500896448263:android:350c12cb273c93f2268fa2",
+        "android_client_info": {
+          "package_name": "com.example.qadam_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbL4adiuXwqfMIbcqCER4bgCssD5zaTlY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
