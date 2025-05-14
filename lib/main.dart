@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:qadam_app/app/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:qadam_app/app/services/challenge_service.dart';
 import 'package:qadam_app/app/services/step_counter_service.dart';
 import 'package:qadam_app/app/services/coin_service.dart';
 import 'package:qadam_app/app/services/auth_service.dart';
@@ -22,6 +23,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => StepCounterService()),
         ChangeNotifierProvider(create: (_) => CoinService()),
+        ChangeNotifierProvider(create: (_) => ChallengeService()),
       ],
       child: const QadamApp(),
     ),

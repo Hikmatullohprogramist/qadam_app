@@ -9,6 +9,8 @@ import 'package:qadam_app/app/screens/referral_screen.dart';
 import 'package:qadam_app/app/components/step_progress_card.dart';
 import 'package:qadam_app/app/components/challenge_banner.dart';
 
+import '../services/auth_service.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -23,22 +25,121 @@ class _HomeScreenState extends State<HomeScreen> {
     // Use addPostFrameCallback to avoid the setState during build error
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Start step counting service
-      final stepService = Provider.of<StepCounterService>(context, listen: false);
+      final stepService =
+          Provider.of<StepCounterService>(context, listen: false);
       stepService.startCounting();
     });
   }
+
+
+
+final GlobalKey<ScaffoldState> _key = GlobalKey(); // Create a key
 
   @override
   Widget build(BuildContext context) {
     final stepService = Provider.of<StepCounterService>(context);
     final coinService = Provider.of<CoinService>(context);
+    final authService = Provider.of<AuthService>(context);
 
     return Scaffold(
+      key: _key,
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context).primaryColor,
+                    Theme.of(context).primaryColor.withOpacity(0.8),
+                  ],
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 35,
+                    backgroundColor: Colors.white,
+
+                    backgroundImage: authService.user?.photoURL != null
+                        ? NetworkImage(authService.user!.photoURL!)
+                        : null,
+                        child: authService.user?.photoURL == null ? const Icon(Icons.person, color: Colors.grey, size: 33,) : null,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    authService.user?.displayName ?? "User",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    authService.user?.email ?? "",
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home_outlined),
+              title: const Text('Asosiy'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Profil'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to profile
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Sozlamalar'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to settings
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Chiqish'),
+              onTap: () {
+                Navigator.pop(context);
+                authService.signOut();
+              },
+            ),
+          ],
+        ),
+      ),
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
-        title: const Text('Qadam++'),
+        automaticallyImplyLeading: false,
+        title: InkWell(
+          onTap: (){
+
+            stepService.addSteps(100);
+          },
+          child: const Text('Qadam++')),
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
+        leading: IconButton(
+            onPressed: () {
+_key.currentState?.openDrawer();
+            },
+            icon: const Icon(
+              Icons.menu,
+            )),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -65,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Salom, Foydalanuvchi!',
+                          'Salom, ${authService.user?.displayName ?? ""}!',
                           style:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
                                     color: Colors.white,

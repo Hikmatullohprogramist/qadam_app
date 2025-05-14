@@ -94,7 +94,7 @@ class StepCounterService extends ChangeNotifier {
     // For now, just incrementing steps by 1 for demo purposes
     // In a real app, would need to handle step count differences properly
     _steps = event.steps;
-    
+  
     _saveSteps();
     notifyListeners();
   }

@@ -12,7 +12,20 @@
           "package_name": "com.example.qadam_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "500896448263-9mh2o6o1ok8e6uhhtha4i24uufnvhhks.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.qadam_app",
+            "certificate_hash": "e45ae9643d076968be683ffcee30d735896ae5f5"
+          }
+        },
+        {
+          "client_id": "500896448263-q5c62ujqcgeifi45l4n6sp1449h1j05s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBbL4adiuXwqfMIbcqCER4bgCssD5zaTlY"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "500896448263-q5c62ujqcgeifi45l4n6sp1449h1j05s.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "500896448263-gs3alo7s1onf69k33pij6v0otrq2bb8p.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.qadamApp"
+              }
+            }
+          ]
         }
       }
     }

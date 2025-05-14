@@ -26,37 +26,35 @@ class AuthService extends ChangeNotifier {
 
       notifyListeners();
     });
-
-   }
+  }
 
   // Email va parol bilan ro'yxatdan o'tish
-  Future<bool> signUpWithEmail(String email, String password, String username) async {
+  Future<bool> signUpWithEmail(
+      String email, String password, String username) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
-        email: email, 
-        password: password
-      );
-      
+          email: email, password: password);
+
       // Username saqlash
       await result.user?.updateDisplayName(username);
-      
+
       // Profil yangilash uchun reload qilish
       await result.user?.reload();
       _user = _auth.currentUser;
-      
+
       // User ma'lumotlarini localStorage ga saqlash
       await _saveUserData(result.user);
-      
+
       _isLoading = false;
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
       _isLoading = false;
-      
+
       if (e.code == 'weak-password') {
         _errorMessage = 'Parol juda oson';
       } else if (e.code == 'email-already-in-use') {
@@ -64,7 +62,7 @@ class AuthService extends ChangeNotifier {
       } else {
         _errorMessage = e.message;
       }
-      
+
       notifyListeners();
       return false;
     } catch (e) {
@@ -83,19 +81,17 @@ class AuthService extends ChangeNotifier {
 
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
-        email: email, 
-        password: password
-      );
-      
+          email: email, password: password);
+
       // User ma'lumotlarini localStorage ga saqlash
       await _saveUserData(result.user);
-      
+
       _isLoading = false;
       notifyListeners();
       return true;
     } on FirebaseAuthException catch (e) {
       _isLoading = false;
-      
+
       if (e.code == 'user-not-found') {
         _errorMessage = 'Bu email topilmadi';
       } else if (e.code == 'wrong-password') {
@@ -103,7 +99,7 @@ class AuthService extends ChangeNotifier {
       } else {
         _errorMessage = e.message;
       }
-      
+
       notifyListeners();
       return false;
     } catch (e) {
@@ -123,7 +119,7 @@ class AuthService extends ChangeNotifier {
     try {
       // Google Sign-In dialog ochish
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+
       if (googleUser == null) {
         // User Google Sign-In ni bekor qildi
         _isLoading = false;
@@ -132,7 +128,8 @@ class AuthService extends ChangeNotifier {
       }
 
       // Google Sign-In authentication
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
         _isLoading = false;
@@ -150,10 +147,10 @@ class AuthService extends ChangeNotifier {
 
       // Credential bilan Firebase ga kirish
       UserCredential result = await _auth.signInWithCredential(credential);
-      
+
       // User ma'lumotlarini localStorage ga saqlash
       await _saveUserData(result.user);
-      
+
       _isLoading = false;
       notifyListeners();
       return true;
@@ -179,7 +176,7 @@ class AuthService extends ChangeNotifier {
       await _googleSignIn.signOut();
       // Firebase sign out
       await _auth.signOut();
-      
+
       // Local storage dan o'chirish
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_id');
@@ -217,6 +214,14 @@ class AuthService extends ChangeNotifier {
       await prefs.setString('user_id', user.uid);
       await prefs.setString('user_email', user.email ?? '');
       await prefs.setString('user_name', user.displayName ?? '');
+
+      // await prefs.setString("user", jsonEncode(user.))
+    }
+
+    Future<String> getUsername() async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      return prefs.getString("user_name") ?? "";
     }
   }
-} 
+}
