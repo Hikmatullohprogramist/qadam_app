@@ -181,9 +181,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   }
                                 },
                           child: authService.isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
+                              ? const Center(
+                                child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
+                              )
                               : const Text(
                                   'Kirish',
                                   style: TextStyle(fontSize: 16),

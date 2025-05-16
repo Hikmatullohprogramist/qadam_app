@@ -1,5 +1,5 @@
 class ChallengeModel {
- final String id;
+  final String id;
   final String title;
   final String description;
   final int reward;
@@ -31,7 +31,7 @@ class ChallengeModel {
   }) {
     return ChallengeModel(
       id: id,
-      title: title, 
+      title: title,
       description: description,
       reward: reward,
       targetSteps: targetSteps,
@@ -42,5 +42,21 @@ class ChallengeModel {
       progress: progress ?? this.progress,
       isCompleted: isCompleted ?? this.isCompleted,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "id": id,
+      "title": title,
+      "description": description,
+      "reward": reward,
+      "targetSteps": targetSteps,
+      "duration": duration,
+      "type": type,
+      "startDate": startDate,
+      "endDate": endDate,
+      "progress": progress,
+      "isCompleted": isCompleted,
+    };
   }
 }

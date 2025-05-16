@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:qadam_app/app/screens/splash_screen.dart';
 import 'package:qadam_app/app/services/step_counter_service.dart';
 import 'package:qadam_app/app/services/coin_service.dart';
 import 'package:qadam_app/app/screens/coin_wallet_screen.dart';
@@ -9,6 +11,7 @@ import 'package:qadam_app/app/screens/referral_screen.dart';
 import 'package:qadam_app/app/components/step_progress_card.dart';
 import 'package:qadam_app/app/components/challenge_banner.dart';
 
+import '../ad_helper.dart';
 import '../services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,6 +22,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  BannerAd? _bannerAd;
+  InterstitialAd? _interstitialAd;
+
+  // COMPLETE: Add _rewardedAd
+  RewardedAd? _rewardedAd;
   @override
   void initState() {
     super.initState();
@@ -28,12 +36,31 @@ class _HomeScreenState extends State<HomeScreen> {
       final stepService =
           Provider.of<StepCounterService>(context, listen: false);
       stepService.startCounting();
+
+      BannerAd(
+        adUnitId: AdHelper.bannerAdUnitId,
+        request: const AdRequest(),
+        size: AdSize.banner,
+        listener: BannerAdListener(
+          onAdLoaded: (ad) {
+            setState(() {
+              _bannerAd = ad as BannerAd;
+            });
+          },
+          onAdFailedToLoad: (ad, err) {
+            debugPrint('Failed to load a banner ad: ${err.message}');
+            ad.dispose();
+          },
+        ),
+      ).load();
+
+      // COMPLETE: Load a rewarded Ad
+
+      // _loadRewardedAd();
     });
   }
 
-
-
-final GlobalKey<ScaffoldState> _key = GlobalKey(); // Create a key
+  final GlobalKey<ScaffoldState> _key = GlobalKey(); // Create a key
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +90,16 @@ final GlobalKey<ScaffoldState> _key = GlobalKey(); // Create a key
                   CircleAvatar(
                     radius: 35,
                     backgroundColor: Colors.white,
-
                     backgroundImage: authService.user?.photoURL != null
                         ? NetworkImage(authService.user!.photoURL!)
                         : null,
-                        child: authService.user?.photoURL == null ? const Icon(Icons.person, color: Colors.grey, size: 33,) : null,
+                    child: authService.user?.photoURL == null
+                        ? const Icon(
+                            Icons.person,
+                            color: Colors.grey,
+                            size: 33,
+                          )
+                        : null,
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -115,8 +147,10 @@ final GlobalKey<ScaffoldState> _key = GlobalKey(); // Create a key
               leading: const Icon(Icons.logout),
               title: const Text('Chiqish'),
               onTap: () {
-                Navigator.pop(context);
                 authService.signOut();
+
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => SplashScreen()));
               },
             ),
           ],
@@ -126,16 +160,15 @@ final GlobalKey<ScaffoldState> _key = GlobalKey(); // Create a key
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: InkWell(
-          onTap: (){
-
-            stepService.addSteps(100);
-          },
-          child: const Text('Qadam++')),
+            onTap: () {
+              stepService.addSteps(100);
+            },
+            child: const Text('Qadam++')),
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 0,
         leading: IconButton(
             onPressed: () {
-_key.currentState?.openDrawer();
+              _key.currentState?.openDrawer();
             },
             icon: const Icon(
               Icons.menu,
@@ -155,6 +188,16 @@ _key.currentState?.openDrawer();
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // User greeting
+
+              if (_bannerAd != null)
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    width: _bannerAd!.size.width.toDouble(),
+                    height: _bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!),
+                  ),
+                ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

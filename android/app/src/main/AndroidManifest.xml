@@ -5,6 +5,11 @@
         android:label="qadam_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-6135925976729797~5814137259"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

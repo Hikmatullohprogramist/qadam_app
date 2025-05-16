@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -216,12 +217,22 @@ class AuthService extends ChangeNotifier {
       await prefs.setString('user_name', user.displayName ?? '');
 
       // await prefs.setString("user", jsonEncode(user.))
-    }
+      // FireStoredan users tablega xozirgi userdi qoshish
 
-    Future<String> getUsername() async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      return prefs.getString("user_name") ?? "";
+      await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
+        'uid': user.uid,
+        'email': user.email,
+        'name': user.displayName,
+        'created_at': FieldValue.serverTimestamp(),
+        'coins': 0,
+        'phone': user.phoneNumber
+      });
     }
+  }
+
+  Future<String> getUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    return prefs.getString("user_name") ?? "";
   }
 }

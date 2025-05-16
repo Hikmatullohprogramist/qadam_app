@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qadam_app/app/services/step_counter_service.dart';
@@ -22,7 +23,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     });
   }
 
-  void _updateChallengesProgress(List<Challenge> challenges, int currentSteps, ChallengeService challengeService) {
+  void _updateChallengesProgress(List<Challenge> challenges, int currentSteps,
+      ChallengeService challengeService) {
     print("Current steps in _updateChallengesProgress: $currentSteps");
     for (var challenge in challenges) {
       if (!challenge.isCompleted && challenge.progress < 1.0) {
@@ -38,21 +40,255 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
             type: 'daily',
           ),
         );
-        
+
         print("Challenge: ${challengeModel.title}");
         print("Target steps: ${challengeModel.targetSteps}");
-        
+
         final progress = calculateProgress(challengeModel, currentSteps);
 
         print("Current steps: $currentSteps");
         print("Calculated progress: $progress");
-        
+
         if (progress != challenge.progress) {
           print("Updating progress from ${challenge.progress} to $progress");
           challengeService.updateChallengeProgress(challenge.id, progress);
         }
       }
     }
+  }
+
+  void showChallengeDialog(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
+    String title = '';
+    String description = '';
+    String reward = '';
+    int targetSteps = 0;
+    int duration = 0;
+    String type = '';
+    DateTime startDate = DateTime.now();
+    DateTime endDate =
+        DateTime.now().add(Duration(days: 7)); // Default duration 7 days
+    double progress = 0.0;
+    bool isCompleted = false;
+
+    TextEditingController _startDateController =
+        TextEditingController(text: "${startDate.toLocal()}".split(' ')[0]);
+    TextEditingController _endDateController =
+        TextEditingController(text: "${endDate.toLocal()}".split(' ')[0]);
+    Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: isStartDate ? startDate : endDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101),
+      );
+      if (picked != null) {
+        if (isStartDate) {
+          startDate = picked;
+          _startDateController.text = "${startDate.toLocal()}".split(' ')[0];
+        } else {
+          endDate = picked;
+          _endDateController.text = "${endDate.toLocal()}".split(' ')[0];
+        }
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                // Added SingleChildScrollView for scrollability
+                child: Column(
+                  mainAxisSize:
+                      MainAxisSize.min, // To make the dialog wrap its content
+                  children: [
+                    Text('Challenge qo\'shish',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 20),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Title'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a title';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) => title = value!,
+                    ),
+                    SizedBox(height: 12),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Description'),
+                      maxLines: 2, // Allow multiple lines for description
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a description';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) => description = value!,
+                    ),
+                    SizedBox(height: 12),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Reward'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a reward';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) => reward = value!,
+                    ),
+                    SizedBox(height: 12),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Target Steps'),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter target steps';
+                        }
+                        if (int.tryParse(value) == null) {
+                          return 'Please enter a valid number';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) => targetSteps = int.parse(value!),
+                    ),
+                    SizedBox(height: 12),
+                    TextFormField(
+                      decoration: InputDecoration(labelText: 'Duration (days)'),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter duration in days';
+                        }
+                        if (int.tryParse(value) == null) {
+                          return 'Please enter a valid number';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) => duration = int.parse(value!),
+                    ),
+                    SizedBox(height: 12),
+                    TextFormField(
+                      decoration: InputDecoration(
+                          labelText: 'Type (e.g., Walking, Running)'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a type';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) => type = value!,
+                    ),
+                    SizedBox(height: 12),
+                    TextFormField(
+                      controller: _startDateController,
+                      decoration: InputDecoration(
+                        labelText: 'Start Date',
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.calendar_today),
+                          onPressed: () => _selectDate(context, true),
+                        ),
+                      ),
+                      readOnly:
+                          true, // Make it read-only to force date picker usage
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a start date';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    TextFormField(
+                      controller: _endDateController,
+                      decoration: InputDecoration(
+                        labelText: 'End Date',
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.calendar_today),
+                          onPressed: () => _selectDate(context, false),
+                        ),
+                      ),
+                      readOnly:
+                          true, // Make it read-only to force date picker usage
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select an end date';
+                        }
+                        if (endDate.isBefore(startDate)) {
+                          return 'End date cannot be before start date';
+                        }
+                        return null;
+                      },
+                    ),
+                    // Progress and isCompleted are typically not set by the user when creating
+                    // They are usually updated as the challenge progresses.
+                    // You can set default values or handle them outside this dialog.
+                    SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              _formKey.currentState!.save();
+                              // Generate a unique ID (you might use a package like uuid)
+                              String id = DateTime.now()
+                                  .millisecondsSinceEpoch
+                                  .toString();
+
+                              Map<String, dynamic> challengeData = {
+                                "id": id,
+                                "title": title,
+                                "description": description,
+                                "reward": reward,
+                                "targetSteps": targetSteps,
+                                "duration": duration,
+                                "type": type,
+                                "startDate": startDate
+                                    .toIso8601String(), // Store as ISO string
+                                "endDate": endDate
+                                    .toIso8601String(), // Store as ISO string
+                                "progress": progress, // Initial progress
+                                "isCompleted":
+                                    isCompleted, // Initial completion status
+                              };
+
+                              //add challenge to firebase
+                              await FirebaseFirestore.instance
+                                  .collection("challenges")
+                                  .add(challengeData);
+                              Navigator.of(context).pop(challengeData);
+                            }
+                          },
+                          child: Text("Qo'shish"),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Colors.grey[300], // Different color for cancel
+                          ),
+                          child: Text("Bekor qilish"),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -77,7 +313,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
 
     // Update progress for daily challenges based on current steps
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateChallengesProgress(dailyChallenges, stepService.steps, challengeService);
+      _updateChallengesProgress(
+          dailyChallenges, stepService.steps, challengeService);
     });
 
     final weeklyChallenges = challengeService.challenges
@@ -107,6 +344,14 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
         .toList();
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          //add challenge dialog
+
+          showChallengeDialog(context);
+        },
+        child: const Icon(Icons.add),
+      ),
       appBar: AppBar(
         title: const Text('Challengelar'),
         backgroundColor: Theme.of(context).primaryColor,
@@ -149,14 +394,20 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                             const SizedBox(height: 10),
                             Text(
                               'Challengelarda qatnashing',
-                              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayMedium
+                                  ?.copyWith(
                                     color: Colors.white,
                                   ),
                             ),
                             const SizedBox(height: 5),
                             Text(
                               'Challengelarni bajarib, qo\'shimcha tangalar yuting',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
                                     color: Colors.white,
                                   ),
                               textAlign: TextAlign.center,
@@ -177,7 +428,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                 const SizedBox(width: 8),
                                 Text(
                                   'Bugungi challengelar',
-                                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displayMedium
+                                      ?.copyWith(
                                         fontSize: 18,
                                       ),
                                 ),
@@ -199,7 +453,13 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                 ),
                               )
                             else
-                              ...dailyChallenges.map((challenge) => _buildChallengeCard(context, challenge, coinService, challengeService)).toList(),
+                              ...dailyChallenges
+                                  .map((challenge) => _buildChallengeCard(
+                                      context,
+                                      challenge,
+                                      coinService,
+                                      challengeService))
+                                  .toList(),
                           ],
                         ),
                       ),
@@ -216,7 +476,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                 const SizedBox(width: 8),
                                 Text(
                                   'Haftalik challengelar',
-                                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displayMedium
+                                      ?.copyWith(
                                         fontSize: 18,
                                       ),
                                 ),
@@ -238,7 +501,13 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                 ),
                               )
                             else
-                              ...weeklyChallenges.map((challenge) => _buildChallengeCard(context, challenge, coinService, challengeService)).toList(),
+                              ...weeklyChallenges
+                                  .map((challenge) => _buildChallengeCard(
+                                      context,
+                                      challenge,
+                                      coinService,
+                                      challengeService))
+                                  .toList(),
                           ],
                         ),
                       ),
@@ -258,7 +527,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                     const SizedBox(width: 8),
                                     Text(
                                       'Bajarilgan challengelar',
-                                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .displayMedium
+                                          ?.copyWith(
                                             fontSize: 18,
                                           ),
                                     ),
@@ -272,7 +544,6 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                 ),
                               ],
                             ),
-                            
                             if (completedChallenges.isEmpty)
                               Container(
                                 padding: const EdgeInsets.all(20),
@@ -288,7 +559,14 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                                 ),
                               )
                             else
-                              ...completedChallenges.take(3).map((challenge) => _buildChallengeCard(context, challenge, coinService, challengeService)).toList(),
+                              ...completedChallenges
+                                  .take(3)
+                                  .map((challenge) => _buildChallengeCard(
+                                      context,
+                                      challenge,
+                                      coinService,
+                                      challengeService))
+                                  .toList(),
                           ],
                         ),
                       ),
@@ -298,9 +576,10 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     );
   }
 
-  Widget _buildChallengeCard(BuildContext context, Challenge challenge, CoinService coinService, ChallengeService challengeService) {
+  Widget _buildChallengeCard(BuildContext context, Challenge challenge,
+      CoinService coinService, ChallengeService challengeService) {
     final clampedProgress = challenge.progress > 1.0 ? 1.0 : challenge.progress;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(15),
@@ -378,7 +657,8 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
               ),
               const SizedBox(width: 15),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFC107).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -429,18 +709,18 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                       );
                     },
                   );
-                  
+
                   try {
                     // Complete the challenge in the database
                     await challengeService.completeChallenge(challenge.id);
-                    
+
                     // Also add coins locally to make it immediately visible
                     await coinService.addCoins(challenge.reward);
-                    
+
                     // Close loading dialog
                     if (!mounted) return;
                     Navigator.of(context).pop();
-                    
+
                     // Show animation and success message
                     showDialog(
                       context: context,
@@ -513,12 +793,11 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
                         );
                       },
                     );
-                    
                   } catch (e) {
                     // Close loading dialog
                     if (!mounted) return;
                     Navigator.of(context).pop();
-                    
+
                     // Show error
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text('Xatolik yuz berdi: $e'),
@@ -555,26 +834,28 @@ class _ChallengeScreenState extends State<ChallengeScreen> {
     print("- targetSteps: ${challenge.targetSteps}");
     print("- currentSteps: $currentSteps");
     print("- existing progress: ${challenge.progress}");
-    
+
     // Safety check for division by zero
     if (challenge.targetSteps <= 0) {
-      print("Target steps is zero or negative, returning existing progress: ${challenge.progress ?? 0}");
+      print(
+          "Target steps is zero or negative, returning existing progress: ${challenge.progress ?? 0}");
       return challenge.progress ?? 0;
     }
-    
+
     // Calculate progress based on steps
     double progress = currentSteps / challenge.targetSteps;
     print("Calculated raw progress: $progress");
-    
+
     // Make sure progress is not negative
     progress = progress < 0 ? 0 : progress;
-    
+
     // For debugging
     final existingProgress = challenge.progress ?? 0;
-    final finalProgress = progress > existingProgress ? progress : existingProgress;
-    
+    final finalProgress =
+        progress > existingProgress ? progress : existingProgress;
+
     print("Final progress value: $finalProgress");
-    
+
     // Return the higher of current progress in database or calculated progress
     return finalProgress;
   }
@@ -605,4 +886,4 @@ class Challenge {
     required this.icon,
     required this.id,
   });
-} 
+}
