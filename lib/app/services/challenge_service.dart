@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:qadam_app/app/models/challenge_model.dart';
 
 class ChallengeService extends ChangeNotifier {
-
   final List<ChallengeModel> _challenges = [];
   bool _isLoading = false;
   String? _error;
@@ -23,8 +22,6 @@ class ChallengeService extends ChangeNotifier {
       final snapshot = await challengesRef.get();
 
 
-      print(snapshot);
-
       _challenges.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -32,14 +29,17 @@ class ChallengeService extends ChangeNotifier {
           id: doc.id,
           title: data['title'] ?? '',
           description: data['description'] ?? '',
-          reward: data['reward'] ?? 0,
+          reward: int.tryParse(data['reward'].toString()) ?? 0,
           targetSteps: data['targetSteps'] ?? 0,
           duration: data['duration'] ?? 1,
           type: data['type'] ?? 'daily',
-          startDate: data['startDate']?.toDate(),
-          endDate: data['endDate']?.toDate(),
+          startDate: DateTime.tryParse(data['startDate']) ?? DateTime.now(),
+          endDate: DateTime.tryParse(data['endDate']) ?? DateTime.now(),
         ));
       }
+
+
+      print(_challenges.length);
 
       _isLoading = false;
       notifyListeners();
@@ -51,13 +51,14 @@ class ChallengeService extends ChangeNotifier {
     }
   }
 
-  Future<void> updateChallengeProgress(String challengeId, double progress) async {
+  Future<void> updateChallengeProgress(
+      String challengeId, double progress) async {
     try {
       await FirebaseFirestore.instance
           .collection('challenges')
           .doc(challengeId)
           .update({'progress': progress});
-          
+
       final index = _challenges.indexWhere((c) => c.id == challengeId);
       if (index != -1) {
         _challenges[index] = _challenges[index].copyWith(progress: progress);
@@ -68,6 +69,7 @@ class ChallengeService extends ChangeNotifier {
       notifyListeners();
     }
   }
+
   Future<void> completeChallenge(String challengeId) async {
     try {
       // Get the challenge reward amount before marking as complete
@@ -85,8 +87,9 @@ class ChallengeService extends ChangeNotifier {
       // Update user's balance in Firestore
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-        
+        final userRef =
+            FirebaseFirestore.instance.collection('users').doc(user.uid);
+
         await FirebaseFirestore.instance.runTransaction((transaction) async {
           final userDoc = await transaction.get(userRef);
           final currentBalance = userDoc.data()?['balance'] ?? 0;
@@ -106,14 +109,13 @@ class ChallengeService extends ChangeNotifier {
       notifyListeners();
     }
   }
- 
-// add challenge function 
+
+// add challenge function
 
   Future<void> addChallenge(ChallengeModel challenge) async {
     try {
-      final docRef = await FirebaseFirestore.instance
-          .collection('challenges')
-          .add({
+      final docRef =
+          await FirebaseFirestore.instance.collection('challenges').add({
         'title': challenge.title,
         'description': challenge.description,
         'reward': challenge.reward,
@@ -148,7 +150,6 @@ class ChallengeService extends ChangeNotifier {
     }
   }
 
-
   Future<void> deleteChallenge(String challengeId) async {
     try {
       await FirebaseFirestore.instance
@@ -159,7 +160,7 @@ class ChallengeService extends ChangeNotifier {
       _challenges.removeWhere((c) => c.id == challengeId);
       notifyListeners();
     } catch (e) {
-      _error = e.toString(); 
+      _error = e.toString();
       notifyListeners();
     }
   }
