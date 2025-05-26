@@ -21,7 +21,6 @@ class ChallengeService extends ChangeNotifier {
       final challengesRef = FirebaseFirestore.instance.collection('challenges');
       final snapshot = await challengesRef.get();
 
-
       _challenges.clear();
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -37,7 +36,6 @@ class ChallengeService extends ChangeNotifier {
           endDate: DateTime.tryParse(data['endDate']) ?? DateTime.now(),
         ));
       }
-
 
       print(_challenges.length);
 
